@@ -37,8 +37,8 @@ func New(ctx context.Context, next http.Handler, config *Config, name string) (h
 	}, nil
 }
 
-func (c *conditionalHeaders) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	host := req.Host
+func (c *conditionalHeaders) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
+	host := request.Host
 
 	// Check each rule
 	for _, rule := range c.rules {
@@ -47,19 +47,25 @@ func (c *conditionalHeaders) ServeHTTP(rw http.ResponseWriter, req *http.Request
 			if matchesHost(host, ruleHost) {
 				// Apply all headers from this rule
 				for key, value := range rule.Headers {
-					req.Header.Set(key, value)
+					request.Header.Set(key, value)
 				}
-				c.next.ServeHTTP(rw, req)
+				// Check if next handler is nil before calling it (needed for yaegi compatibility)
+				if c.next != nil {
+					c.next.ServeHTTP(responseWriter, request)
+				}
 				return
 			}
 		}
 	}
 
-	c.next.ServeHTTP(rw, req)
+	// Check if next handler is nil before calling it (needed for yaegi compatibility)
+	if c.next != nil {
+		c.next.ServeHTTP(responseWriter, request)
+	}
 }
 
 // matchesHost checks if the incoming host matches the rule host
-// Supports exact match and wildcard subdomain matching
+// Supports exact match and wildcard subdomain matching.
 func matchesHost(incomingHost, ruleHost string) bool {
 	// Remove port if present
 	if idx := strings.Index(incomingHost, ":"); idx != -1 {
