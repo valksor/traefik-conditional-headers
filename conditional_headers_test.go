@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-// Test_matchesHost tests the host matching function with various scenarios
+// Test_matchesHost tests the host matching function with various scenarios.
 func Test_matchesHost(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -143,7 +143,7 @@ func Test_matchesHost(t *testing.T) {
 	}
 }
 
-// TestCreateConfig tests the configuration creation function
+// TestCreateConfig tests the configuration creation function.
 func TestCreateConfig(t *testing.T) {
 	config := CreateConfig()
 
@@ -160,7 +160,7 @@ func TestCreateConfig(t *testing.T) {
 	}
 }
 
-// TestNew tests the plugin constructor
+// TestNew tests the plugin constructor.
 func TestNew(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -168,8 +168,9 @@ func TestNew(t *testing.T) {
 		expectError bool
 	}{
 		{
-			name:   "Valid config with empty rules",
-			config: &Config{Rules: []Rule{}},
+			name:        "Valid config with empty rules",
+			config:      &Config{Rules: []Rule{}},
+			expectError: false,
 		},
 		{
 			name:   "Valid config with rules",
@@ -181,10 +182,12 @@ func TestNew(t *testing.T) {
 					},
 				},
 			},
+			expectError: false,
 		},
 		{
-			name:   "Nil config",
-			config: &Config{},
+			name:        "Nil config",
+			config:      &Config{Rules: []Rule{}},
+			expectError: false,
 		},
 	}
 
@@ -218,7 +221,7 @@ func TestNew(t *testing.T) {
 	}
 }
 
-// Test_conditionalHeaders_fields tests the internal state of the handler
+// Test_conditionalHeaders_fields tests the internal state of the handler.
 func Test_conditionalHeaders_fields(t *testing.T) {
 	rules := []Rule{
 		{
@@ -235,35 +238,38 @@ func Test_conditionalHeaders_fields(t *testing.T) {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
 
-	ch := handler.(*conditionalHeaders)
+	conditionalHandler, ok := handler.(*conditionalHeaders)
+	if !ok {
+		t.Fatalf("Expected handler to be of type *conditionalHeaders, got %T", handler)
+	}
 
-	if ch.next == nil {
+	if conditionalHandler.next == nil {
 		t.Error("Handler next field is nil")
 	}
 
-	if len(ch.rules) != 1 {
-		t.Errorf("Handler rules length: got %d, want 1", len(ch.rules))
+	if len(conditionalHandler.rules) != 1 {
+		t.Errorf("Handler rules length: got %d, want 1", len(conditionalHandler.rules))
 	}
 
-	if ch.name != "test-plugin" {
-		t.Errorf("Handler name: got %q, want %q", ch.name, "test-plugin")
+	if conditionalHandler.name != "test-plugin" {
+		t.Errorf("Handler name: got %q, want %q", conditionalHandler.name, "test-plugin")
 	}
 
 	// Verify rule content
-	if len(ch.rules[0].Hosts) != 1 {
-		t.Errorf("Rule hosts length: got %d, want 1", len(ch.rules[0].Hosts))
+	if len(conditionalHandler.rules[0].Hosts) != 1 {
+		t.Errorf("Rule hosts length: got %d, want 1", len(conditionalHandler.rules[0].Hosts))
 	}
 
-	if ch.rules[0].Hosts[0] != "example.com" {
-		t.Errorf("Rule host: got %q, want %q", ch.rules[0].Hosts[0], "example.com")
+	if conditionalHandler.rules[0].Hosts[0] != "example.com" {
+		t.Errorf("Rule host: got %q, want %q", conditionalHandler.rules[0].Hosts[0], "example.com")
 	}
 
-	if ch.rules[0].Headers["X-Test"] != "value" {
-		t.Errorf("Rule header: got %q, want %q", ch.rules[0].Headers["X-Test"], "value")
+	if conditionalHandler.rules[0].Headers["X-Test"] != "value" {
+		t.Errorf("Rule header: got %q, want %q", conditionalHandler.rules[0].Headers["X-Test"], "value")
 	}
 }
 
-// Benchmark_matchesHost benchmarks the host matching function
+// Benchmark_matchesHost benchmarks the host matching function.
 func Benchmark_matchesHost(b *testing.B) {
 	testCases := []struct {
 		name         string

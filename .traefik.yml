@@ -2,6 +2,7 @@ displayName: Conditional Headers
 type: middleware
 import: github.com/valksor/traefik-conditional-headers
 summary: Set headers conditionally based on hostname (supports multiple hosts per rule)
+iconPath: .assets/logo.jpg
 
 testData:
   rules:

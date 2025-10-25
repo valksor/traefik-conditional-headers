@@ -1,0 +1,132 @@
+version: "2"
+
+linters:
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    - dupl
+    - errcheck
+    - errorlint
+    - exhaustive
+    - exhaustruct
+    - gocognit
+    - gocyclo
+    - godot
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - musttag
+    - nestif
+    - nilerr
+    - noctx
+    - prealloc
+    - revive
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unparam
+    - unused
+    - varnamelen
+    - wastedassign
+    - whitespace
+    - wrapcheck
+  settings:
+    revive:
+      rules:
+        - name: exported
+          severity: warning
+          disabled: false
+          exclude: [ "" ]
+          arguments:
+            - disable-checks-on-functions
+            - disable-checks-on-methods
+            - disable-checks-on-types
+            - disable-checks-on-variables
+            - disable-checks-on-constants
+        - name: confusing-naming
+          severity: warning
+          disabled: false
+        - name: datarace
+          severity: warning
+          disabled: false
+        - name: deep-exit
+          severity: warning
+          disabled: false
+        - name: early-return
+          severity: warning
+          disabled: false
+        - name: empty-block
+          severity: warning
+          disabled: false
+        - name: empty-lines
+          severity: warning
+          disabled: false
+        - name: error-naming
+          severity: warning
+          disabled: false
+        - name: error-return
+          severity: warning
+          disabled: false
+        - name: get-return
+          severity: warning
+          disabled: false
+        - name: identical-branches
+          severity: warning
+          disabled: false
+        - name: import-shadowing
+          severity: warning
+          disabled: false
+        - name: optimize-operands-order
+          severity: warning
+          disabled: false
+        - name: redefines-builtin-id
+          severity: warning
+          disabled: false
+        - name: redundant-import-alias
+          severity: warning
+          disabled: false
+        - name: string-of-int
+          severity: warning
+          disabled: false
+        - name: superfluous-else
+          severity: warning
+          disabled: false
+        - name: unchecked-type-assertion
+          severity: warning
+          disabled: false
+        - name: unconditional-recursion
+          severity: warning
+          disabled: false
+        - name: unhandled-error
+          severity: warning
+          disabled: false
+        - name: unreachable-code
+          severity: warning
+          disabled: false
+        - name: use-any
+          severity: warning
+          disabled: false
+        - name: use-errors-new
+          severity: warning
+          disabled: false
+
+output:
+  path-mode: "abs"
+  sort-results: true
+  formats:
+    text:
+      colors: true
+      path: stdout
+      print-issued-lines: true
+      print-linter-name: true
+  sort-order:
+    - linter
+    - file
+    - severity
