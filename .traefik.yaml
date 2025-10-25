@@ -1,0 +1,19 @@
+displayName: Conditional Headers
+type: middleware
+import: github.com/valksor/traefik-conditional-headers
+summary: Set headers conditionally based on hostname (supports multiple hosts per rule)
+
+testData:
+  rules:
+    - hosts:
+        - demo.dev.io
+        - test.demo.dev.io
+        - staging.demo.dev.io
+      headers:
+        X-App-Kernel-Name: demo.valksor.com
+        X-Environment: production
+    - hosts:
+        - "*.internal.dev.io"
+      headers:
+        X-App-Kernel-Name: internal.valksor.com
+        X-Environment: internal
