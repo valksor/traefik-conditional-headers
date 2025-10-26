@@ -59,8 +59,8 @@ func executeTestRequest(t *testing.T, rules []Rule, requestHost string) (map[str
 	return capturedHeaders, responseRecorder
 }
 
-// Test_conditionalHeaders_ServeHTTP tests the main HTTP handler functionality.
-func Test_conditionalHeaders_ServeHTTP(t *testing.T) {
+// TestConditionalHeadersServeHTTP tests the main HTTP handler functionality.
+func TestConditionalHeadersServeHTTP(t *testing.T) {
 	tests := []struct {
 		name            string
 		rules           []Rule
@@ -70,65 +70,65 @@ func Test_conditionalHeaders_ServeHTTP(t *testing.T) {
 	}{
 		{
 			name:            "No matching rules",
-			rules:           []Rule{{Hosts: []string{"example.com"}, Headers: map[string]string{"X-Test": "value"}}},
-			requestHost:     "other.com",
+			rules:           []Rule{{Hosts: []string{testHostExampleCom}, Headers: map[string]string{testHeaderXTest: testValueValue}}},
+			requestHost:     testHostOtherCom,
 			expectedHeaders: map[string]string{},
 			shouldMatch:     false,
 		},
 		{
 			name:            "Exact host match",
-			rules:           []Rule{{Hosts: []string{"example.com"}, Headers: map[string]string{"X-Custom": "test-value"}}},
-			requestHost:     "example.com",
-			expectedHeaders: map[string]string{"X-Custom": "test-value"},
+			rules:           []Rule{{Hosts: []string{testHostExampleCom}, Headers: map[string]string{testHeaderXCustom: testValueTestValue}}},
+			requestHost:     testHostExampleCom,
+			expectedHeaders: map[string]string{testHeaderXCustom: testValueTestValue},
 			shouldMatch:     true,
 		},
 		{
 			name:            "Wildcard host match",
-			rules:           []Rule{{Hosts: []string{"*.example.com"}, Headers: map[string]string{"X-Environment": "development"}}},
-			requestHost:     "api.example.com",
-			expectedHeaders: map[string]string{"X-Environment": "development"},
+			rules:           []Rule{{Hosts: []string{testHostWildcardExampleCom}, Headers: map[string]string{testHeaderXEnvironment: testValueDevelopment}}},
+			requestHost:     testHostAPIExampleCom,
+			expectedHeaders: map[string]string{testHeaderXEnvironment: testValueDevelopment},
 			shouldMatch:     true,
 		},
 		{
 			name: "Multiple hosts in rule match",
 			rules: []Rule{
 				{
-					Hosts:   []string{"example.com", "api.example.com", "test.com"},
-					Headers: map[string]string{"X-Service": "api", "X-Version": "v1"},
+					Hosts:   []string{testHostExampleCom, testHostAPIExampleCom, testHostTestCom},
+					Headers: map[string]string{testHeaderXService: testValueAPI, testHeaderXVersion: testValueV1},
 				},
 			},
-			requestHost:     "api.example.com",
-			expectedHeaders: map[string]string{"X-Service": "api", "X-Version": "v1"},
+			requestHost:     testHostAPIExampleCom,
+			expectedHeaders: map[string]string{testHeaderXService: testValueAPI, testHeaderXVersion: testValueV1},
 			shouldMatch:     true,
 		},
 		{
 			name: "First rule wins - multiple matching rules",
 			rules: []Rule{
-				{Hosts: []string{"*.example.com"}, Headers: map[string]string{"X-First": "should-win"}},
-				{Hosts: []string{"api.example.com"}, Headers: map[string]string{"X-Second": "should-not-win"}},
+				{Hosts: []string{testHostWildcardExampleCom}, Headers: map[string]string{testHeaderXFirst: testValueShouldWin}},
+				{Hosts: []string{testHostAPIExampleCom}, Headers: map[string]string{testHeaderXSecond: testValueShouldNotWin}},
 			},
-			requestHost:     "api.example.com",
-			expectedHeaders: map[string]string{"X-First": "should-win"},
+			requestHost:     testHostAPIExampleCom,
+			expectedHeaders: map[string]string{testHeaderXFirst: testValueShouldWin},
 			shouldMatch:     true,
 		},
 		{
 			name:            "Host with port matches",
-			rules:           []Rule{{Hosts: []string{"example.com"}, Headers: map[string]string{"X-Port-Test": "success"}}},
-			requestHost:     "example.com:8080",
-			expectedHeaders: map[string]string{"X-Port-Test": "success"},
+			rules:           []Rule{{Hosts: []string{testHostExampleCom}, Headers: map[string]string{testHeaderXPortTest: testValueSuccess}}},
+			requestHost:     testHostExampleComWithPort,
+			expectedHeaders: map[string]string{testHeaderXPortTest: testValueSuccess},
 			shouldMatch:     true,
 		},
 		{
 			name:            "Partial match works",
-			rules:           []Rule{{Hosts: []string{"api"}, Headers: map[string]string{"X-Partial": "match"}}},
-			requestHost:     "my-api.example.com",
-			expectedHeaders: map[string]string{"X-Partial": "match"},
+			rules:           []Rule{{Hosts: []string{testHostAPISubstring}, Headers: map[string]string{testHeaderXPartial: testValueMatch}}},
+			requestHost:     testHostMyAPIExampleCom,
+			expectedHeaders: map[string]string{testHeaderXPartial: testValueMatch},
 			shouldMatch:     true,
 		},
 		{
 			name:            "Empty rules list",
 			rules:           []Rule{},
-			requestHost:     "example.com",
+			requestHost:     testHostExampleCom,
 			expectedHeaders: map[string]string{},
 			shouldMatch:     false,
 		},
@@ -147,8 +147,8 @@ func Test_conditionalHeaders_ServeHTTP(t *testing.T) {
 	}
 }
 
-// Test_conditionalHeaders_ServeHTTP_requestFlow tests that requests flow properly to the next handler.
-func Test_conditionalHeaders_ServeHTTP_requestFlow(t *testing.T) {
+// TestConditionalHeadersServeHTTPRequestFlow tests that requests flow properly to the next handler.
+func TestConditionalHeadersServeHTTPRequestFlow(t *testing.T) {
 	// Track if the next handler was called
 	nextCalled := false
 	next := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
@@ -165,18 +165,18 @@ func Test_conditionalHeaders_ServeHTTP_requestFlow(t *testing.T) {
 	config := &Config{
 		Rules: []Rule{
 			{
-				Hosts:   []string{"example.com"},
-				Headers: map[string]string{"X-Test": "value"},
+				Hosts:   []string{testHostExampleCom},
+				Headers: map[string]string{testHeaderXTest: testValueValue},
 			},
 		},
 	}
 
-	handler, err := New(context.Background(), next, config, "test")
+	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
 
-	req := createTestRequest("example.com")
+	req := createTestRequest(testHostExampleCom)
 	responseRecorder := createTestResponse()
 
 	handler.ServeHTTP(responseRecorder, req)
@@ -191,19 +191,19 @@ func Test_conditionalHeaders_ServeHTTP_requestFlow(t *testing.T) {
 		t.Errorf("Expected status %d, got %d", http.StatusOK, responseRecorder.Code)
 	}
 
-	expectedBody := "Next handler called"
+	expectedBody := testResponseNextCalled
 	if responseRecorder.Body.String() != expectedBody {
 		t.Errorf("Expected body %q, got %q", expectedBody, responseRecorder.Body.String())
 	}
 
 	// Verify headers were set
-	if req.Header.Get("X-Test") != "value" {
-		t.Errorf("Expected header X-Test to be 'value', got %q", req.Header.Get("X-Test"))
+	if req.Header.Get(testHeaderXTest) != testValueValue {
+		t.Errorf("Expected header X-Test to be 'value', got %q", req.Header.Get(testHeaderXTest))
 	}
 }
 
-// Test_conditionalHeaders_ServeHTTP_noRules tests behavior when no rules are configured.
-func Test_conditionalHeaders_ServeHTTP_noRules(t *testing.T) {
+// TestConditionalHeadersServeHTTPNoRules tests behavior when no rules are configured.
+func TestConditionalHeadersServeHTTPNoRules(t *testing.T) {
 	nextCalled := false
 	next := http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 		nextCalled = true
@@ -211,12 +211,12 @@ func Test_conditionalHeaders_ServeHTTP_noRules(t *testing.T) {
 	})
 
 	config := &Config{Rules: []Rule{}}
-	handler, err := New(context.Background(), next, config, "test")
+	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
 
-	req := createTestRequest("example.com")
+	req := createTestRequest(testHostExampleCom)
 	responseRecorder := createTestResponse()
 
 	handler.ServeHTTP(responseRecorder, req)
@@ -230,59 +230,59 @@ func Test_conditionalHeaders_ServeHTTP_noRules(t *testing.T) {
 	}
 }
 
-// Test_conditionalHeaders_ServeHTTP_nilNext tests behavior when next handler is nil.
-func Test_conditionalHeaders_ServeHTTP_nilNext(t *testing.T) {
+// TestConditionalHeadersServeHTTPNilNext tests behavior when next handler is nil.
+func TestConditionalHeadersServeHTTPNilNext(t *testing.T) {
 	config := &Config{
 		Rules: []Rule{
 			{
-				Hosts:   []string{"example.com"},
-				Headers: map[string]string{"X-Test": "value"},
+				Hosts:   []string{testHostExampleCom},
+				Headers: map[string]string{testHeaderXTest: testValueValue},
 			},
 		},
 	}
 
-	handler, err := New(context.Background(), nil, config, "test")
+	handler, err := New(context.Background(), nil, config, testPluginName)
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
 
-	req := createTestRequest("example.com")
+	req := createTestRequest(testHostExampleCom)
 	responseRecorder := createTestResponse()
 
 	// This should NOT panic - nil next handlers are handled gracefully for yaegi compatibility
 	handler.ServeHTTP(responseRecorder, req)
 
 	// Verify that headers were set despite next being nil
-	if req.Header.Get("X-Test") != "value" {
-		t.Errorf("Expected header X-Test to be 'value', got %q", req.Header.Get("X-Test"))
+	if req.Header.Get(testHeaderXTest) != testValueValue {
+		t.Errorf("Expected header X-Test to be 'value', got %q", req.Header.Get(testHeaderXTest))
 	}
 }
 
-// Test_conditionalHeaders_multipleHeaders tests multiple headers being set.
-func Test_conditionalHeaders_multipleHeaders(t *testing.T) {
+// TestConditionalHeadersMultipleHeaders tests multiple headers being set.
+func TestConditionalHeadersMultipleHeaders(t *testing.T) {
 	headers := map[string]string{
-		"X-Service":     "api",
-		"X-Version":     "v2",
-		"X-Environment": "production",
-		"X-Custom":      "test-value",
+		testHeaderXService:     testValueAPI,
+		testHeaderXVersion:     testValueV2,
+		testHeaderXEnvironment: testValueProduction,
+		testHeaderXCustom:      testValueTestValue,
 	}
 
 	config := &Config{
 		Rules: []Rule{
 			{
-				Hosts:   []string{"api.example.com"},
+				Hosts:   []string{testHostAPIExampleCom},
 				Headers: headers,
 			},
 		},
 	}
 
 	next := mockNextHandler()
-	handler, err := New(context.Background(), next, config, "test")
+	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
 
-	req := createTestRequest("api.example.com")
+	req := createTestRequest(testHostAPIExampleCom)
 	responseRecorder := createTestResponse()
 
 	handler.ServeHTTP(responseRecorder, req)
@@ -296,24 +296,24 @@ func Test_conditionalHeaders_multipleHeaders(t *testing.T) {
 	}
 }
 
-// Benchmark_conditionalHeaders_ServeHTTP benchmarks the ServeHTTP method.
-func Benchmark_conditionalHeaders_ServeHTTP(b *testing.B) {
+// BenchmarkConditionalHeadersServeHTTP benchmarks the ServeHTTP method.
+func BenchmarkConditionalHeadersServeHTTP(b *testing.B) {
 	config := &Config{
 		Rules: []Rule{
 			{
-				Hosts:   []string{"example.com", "*.example.com"},
-				Headers: map[string]string{"X-Test": "value"},
+				Hosts:   []string{testHostExampleCom, testHostWildcardExampleCom},
+				Headers: map[string]string{testHeaderXTest: testValueValue},
 			},
 		},
 	}
 
 	next := mockNextHandler()
-	handler, err := New(context.Background(), next, config, "test")
+	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
 		b.Fatalf("Failed to create handler: %v", err)
 	}
 
-	req := createTestRequest("api.example.com")
+	req := createTestRequest(testHostAPIExampleCom)
 	responseRecorder := createTestResponse()
 
 	b.ResetTimer()

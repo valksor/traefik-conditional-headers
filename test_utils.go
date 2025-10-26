@@ -7,7 +7,7 @@ import (
 
 // createTestRequest creates an HTTP request for testing.
 func createTestRequest(host string) *http.Request {
-	req := httptest.NewRequest("GET", "https://"+host+"/test", nil)
+	req := httptest.NewRequest("GET", "https://"+host+testURLPath, nil)
 	req.Host = host
 	return req
 }
@@ -21,7 +21,7 @@ func createTestResponse() *httptest.ResponseRecorder {
 func mockNextHandler() http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		responseWriter.WriteHeader(http.StatusOK)
-		_, err := responseWriter.Write([]byte("OK"))
+		_, err := responseWriter.Write([]byte(testResponseOK))
 		if err != nil {
 			return
 		}
@@ -36,7 +36,7 @@ func headerCaptureHandler(capturedHeadersRef *map[string][]string) http.Handler 
 			(*capturedHeadersRef)[key] = values
 		}
 		responseWriter.WriteHeader(http.StatusOK)
-		_, err := responseWriter.Write([]byte("OK"))
+		_, err := responseWriter.Write([]byte(testResponseOK))
 		if err != nil {
 			return
 		}

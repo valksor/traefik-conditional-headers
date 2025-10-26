@@ -10,13 +10,14 @@
 // the same header configuration within a single rule.
 //
 // Example configuration:
-//   rules:
-//     - hosts:
-//         - api.example.com
-//         - "*.dev.example.com"
-//       headers:
-//         X-Environment: "development"
-//         X-Service: "api-gateway"
+//
+//	rules:
+//	  - hosts:
+//	      - api.example.com
+//	      - "*.dev.example.com"
+//	    headers:
+//	      X-Environment: "development"
+//	      X-Service: "api-gateway"
 //
 // Performance considerations:
 //   - The plugin processes rules sequentially, so place most specific rules first
@@ -60,13 +61,15 @@ type Rule struct {
 //   - *Config: A pointer to a configuration with empty rules slice.
 //
 // Example:
-//   config := CreateConfig()
-//   config.Rules = []Rule{
-//       {
-//           Hosts: []string{"example.com"},
-//           Headers: map[string]string{"X-Custom": "value"},
-//       },
-//   }
+//
+//	config := CreateConfig()
+//	config.Rules = []Rule{
+//	    {
+//	        Hosts: []string{"example.com"},
+//	        Headers: map[string]string{"X-Custom": "value"},
+//	    },
+//	}
+//
 //goland:noinspection GoUnusedExportedFunction
 func CreateConfig() *Config {
 	return &Config{
@@ -98,6 +101,7 @@ type conditionalHeaders struct {
 //
 // The function gracefully handles nil next handlers to maintain compatibility with yaegi
 // (Traefik's plugin interpreter) during configuration testing.
+//
 //goland:noinspection GoUnusedExportedFunction,GoUnusedParameter
 func New(ctx context.Context, next http.Handler, config *Config, name string) (http.Handler, error) {
 	return &conditionalHeaders{

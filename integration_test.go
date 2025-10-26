@@ -6,248 +6,265 @@ import (
 	"testing"
 )
 
-// TestIntegration_RealWorldScenarios tests realistic configuration scenarios.
-func TestIntegration_RealWorldScenarios(t *testing.T) {
+// assertExpectedHeaders validates that expected headers are present in actual headers.
+func assertExpectedHeaders(t *testing.T, host string, expectedHeaders map[string]string, actualHeaders map[string][]string) {
+	for expectedKey, expectedValue := range expectedHeaders {
+		actualValue, exists := actualHeaders[expectedKey]
+		if !exists {
+			t.Errorf("Expected header %q to be set for host %q", expectedKey, host)
+			continue
+		}
+
+		// For simplicity, we'll check the first value (headers are stored as slices)
+		if len(actualValue) == 0 || actualValue[0] != expectedValue {
+			t.Errorf("Header %q for host %q: expected %q, got %q",
+				expectedKey, host, expectedValue, actualValue)
+		}
+	}
+}
+
+// validateTestRequest executes a test request and validates expected headers.
+func validateTestRequest(t *testing.T, config *Config, testReq testRequest) {
+	headers := makeTestRequest(t, config, testReq.host)
+	assertExpectedHeaders(t, testReq.host, testReq.expectedHeaders, headers)
+}
+
+// runTestCase executes all test requests for a given test case.
+func runTestCase(t *testing.T, testCase struct {
+	name         string
+	config       *Config
+	testRequests []testRequest
+	description  string
+}) {
+	t.Logf("Testing scenario: %s", testCase.description)
+
+	for _, testReq := range testCase.testRequests {
+		t.Run(testReq.description, func(t *testing.T) {
+			validateTestRequest(t, testCase.config, testReq)
+		})
+	}
+}
+
+// TestIntegrationRealWorldScenarios tests realistic configuration scenarios.
+func TestIntegrationRealWorldScenarios(t *testing.T) {
 	tests := []struct {
-		name            string
-		config          *Config
-		testRequests    []testRequest
-		description     string
+		name         string
+		config       *Config
+		testRequests []testRequest
+		description  string
 	}{
 		{
-			name: "Multi-environment setup",
+			name:        "Multi-environment setup",
 			description: "Test configuration for different environments with subdomains",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts: []string{"*.dev.example.com", "api.dev.example.com", "*.staging.example.com", "staging-api.example.com"},
+						Hosts: []string{testHostWildcardDevExample, testHostAPIDevExampleCom, testHostWildcardStagingExample, testHostStagingAPIExample},
 						Headers: map[string]string{
-							"X-Environment": "development",
-							"X-Debug":       "true",
-							"X-CORS":        "*",
+							testHeaderXEnvironment: testValueDevelopment,
+							testHeaderXDebug:       testValueTrue,
+							testHeaderXCORS:        "*",
 						},
 					},
 					{
-						Hosts: []string{"api.example.com", "production-api.example.com"},
+						Hosts: []string{testHostAPIExampleCom, testHostProductionAPIExample},
 						Headers: map[string]string{
-							"X-Environment": "production",
-							"X-Cache-Control": "no-cache",
+							testHeaderXEnvironment:  testValueProduction,
+							testHeaderXCacheControl: testValueNoCache,
 						},
 					},
 					{
-						Hosts: []string{"*.example.com"},
+						Hosts: []string{testHostWildcardExampleCom},
 						Headers: map[string]string{
-							"X-Service": "api-gateway",
-							"X-Version": "v2.1.0",
+							testHeaderXService: testValueAPIGateway,
+							testHeaderXVersion: testValueV210,
 						},
 					},
 				},
 			},
 			testRequests: []testRequest{
 				{
-					host: "api.dev.example.com",
+					host: testHostAPIDevExampleCom,
 					expectedHeaders: map[string]string{
-						"X-Environment": "development",
-						"X-Debug":       "true",
-						"X-Cors":        "*",
+						testHeaderXEnvironment: testValueDevelopment,
+						testHeaderXDebug:       testValueTrue,
+						"X-Cors":               "*",
 					},
 					description: "Development API gets debug headers",
 				},
 				{
-					host: "api.example.com",
+					host: testHostAPIExampleCom,
 					expectedHeaders: map[string]string{
-						"X-Environment":  "production",
-						"X-Cache-Control": "no-cache",
+						testHeaderXEnvironment:  testValueProduction,
+						testHeaderXCacheControl: testValueNoCache,
 					},
 					description: "Production API gets cache control headers",
 				},
 				{
-					host: "test.example.com",
+					host: testHostTestExampleCom,
 					expectedHeaders: map[string]string{
-						"X-Service": "api-gateway",
-						"X-Version": "v2.1.0",
+						testHeaderXService: testValueAPIGateway,
+						testHeaderXVersion: testValueV210,
 					},
 					description: "Test subdomain gets wildcard rule headers",
 				},
 				{
-					host: "other.com",
+					host:            testHostOtherCom,
 					expectedHeaders: map[string]string{},
-					description: "External domain gets no headers",
+					description:     "External domain gets no headers",
 				},
 			},
 		},
 		{
-			name: "Microservice routing with authentication",
+			name:        "Microservice routing with authentication",
 			description: "Test microservice setup with authentication and versioning",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts: []string{"auth.service.local", "login.service.local"},
+						Hosts: []string{testHostAuthServiceLocal, testHostLoginServiceLocal},
 						Headers: map[string]string{
-							"X-Service-Type": "authentication",
-							"X-Auth-Required": "false",
-							"X-Public":       "true",
+							testHeaderXServiceType:  testValueAuthentication,
+							testHeaderXAuthRequired: testValueFalse,
+							testHeaderXPublic:       testValueTrue,
 						},
 					},
 					{
-						Hosts: []string{"users.api.service.local", "profile.api.service.local"},
+						Hosts: []string{testHostUsersAPIServiceLocal, testHostProfileAPIService},
 						Headers: map[string]string{
-							"X-Service-Type": "user-management",
-							"X-Auth-Required": "true",
-							"X-Rate-Limit":    "1000/hour",
+							testHeaderXServiceType:  testValueUserManagement,
+							testHeaderXAuthRequired: testValueTrue,
+							testHeaderXRateLimit:    testValue1000PerHour,
 						},
 					},
 					{
-						Hosts: []string{"admin.service.local"},
+						Hosts: []string{testHostAdminServiceLocal},
 						Headers: map[string]string{
-							"X-Service-Type": "administration",
-							"X-Auth-Required": "true",
-							"X-Role-Required": "admin",
-							"X-Audit-Log":     "true",
+							testHeaderXServiceType:  testValueAdministration,
+							testHeaderXAuthRequired: testValueTrue,
+							testHeaderXRoleRequired: testValueAdmin,
+							testHeaderXAuditLog:     testValueTrue,
 						},
 					},
 					{
-						Hosts: []string{"*.service.local"},
+						Hosts: []string{testHostWildcardServiceLocal},
 						Headers: map[string]string{
-							"X-Cluster": "production",
-							"X-Datacenter": "us-west-2",
+							testHeaderXCluster:    testValueProductionCluster,
+							testHeaderXDatacenter: testValueUSWest2,
 						},
 					},
 				},
 			},
 			testRequests: []testRequest{
 				{
-					host: "auth.service.local",
+					host: testHostAuthServiceLocal,
 					expectedHeaders: map[string]string{
-						"X-Service-Type": "authentication",
-						"X-Auth-Required": "false",
-						"X-Public":       "true",
+						testHeaderXServiceType:  testValueAuthentication,
+						testHeaderXAuthRequired: testValueFalse,
+						testHeaderXPublic:       testValueTrue,
 					},
 					description: "Auth service gets public headers",
 				},
 				{
-					host: "users.api.service.local",
+					host: testHostUsersAPIServiceLocal,
 					expectedHeaders: map[string]string{
-						"X-Service-Type": "user-management",
-						"X-Auth-Required": "true",
-						"X-Rate-Limit":    "1000/hour",
+						testHeaderXServiceType:  testValueUserManagement,
+						testHeaderXAuthRequired: testValueTrue,
+						testHeaderXRateLimit:    testValue1000PerHour,
 					},
 					description: "Users API gets authentication and rate limiting headers",
 				},
 				{
-					host: "admin.service.local",
+					host: testHostAdminServiceLocal,
 					expectedHeaders: map[string]string{
-						"X-Service-Type": "administration",
-						"X-Auth-Required": "true",
-						"X-Role-Required": "admin",
-						"X-Audit-Log":     "true",
+						testHeaderXServiceType:  testValueAdministration,
+						testHeaderXAuthRequired: testValueTrue,
+						testHeaderXRoleRequired: testValueAdmin,
+						testHeaderXAuditLog:     testValueTrue,
 					},
 					description: "Admin service gets strict security headers",
 				},
 				{
-					host: "cache.service.local",
+					host: testHostCacheServiceLocal,
 					expectedHeaders: map[string]string{
-						"X-Cluster": "production",
-						"X-Datacenter": "us-west-2",
+						testHeaderXCluster:    testValueProductionCluster,
+						testHeaderXDatacenter: testValueUSWest2,
 					},
 					description: "Generic service gets cluster headers only",
 				},
 			},
 		},
 		{
-			name: "CDN and static file hosting",
+			name:        "CDN and static file hosting",
 			description: "Test CDN setup with different file types and caching strategies",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts: []string{"images.cdn.example.com", "img.cdn.example.com"},
+						Hosts: []string{testHostImagesCDNExample, testHostImgCDNExample},
 						Headers: map[string]string{
-							"X-Content-Type": "image",
-							"X-Cache-Control": "public, max-age=31536000, immutable",
-							"X-Compress": "gzip",
+							testHeaderXContentType:  testValueImage,
+							testHeaderXCacheControl: testValuePublicImmutable,
+							testHeaderXCompress:     testValueGzip,
 						},
 					},
 					{
-						Hosts: []string{"api.example.com"},
+						Hosts: []string{testHostAPIExampleCom},
 						Headers: map[string]string{
-							"X-Content-Type": "api",
-							"X-Cache-Control": "no-cache",
-							"X-Rate-Limit": "10000/hour",
+							testHeaderXContentType:  testValueAPI2,
+							testHeaderXCacheControl: testValueNoCache,
+							testHeaderXRateLimit:    testValue10000PerHour,
 						},
 					},
 					{
-						Hosts: []string{"cdn.example.com", "static.example.com", "assets.example.com"},
+						Hosts: []string{testHostCDNExample, testHostStaticExample, testHostAssetsExample},
 						Headers: map[string]string{
-							"X-Content-Type": "static",
-							"X-Cache-Control": "public, max-age=31536000",
-							"X-CDN": "enabled",
+							testHeaderXContentType:  testValueStatic,
+							testHeaderXCacheControl: testValuePublicMaxAge,
+							testHeaderXCDN:          testValueEnabled,
 						},
 					},
+				},
 			},
-		},
-		testRequests: []testRequest{
+			testRequests: []testRequest{
 				{
-					host: "cdn.example.com",
+					host: testHostCDNExample,
 					expectedHeaders: map[string]string{
-						"X-Content-Type": "static",
-						"X-Cache-Control": "public, max-age=31536000",
-						"X-Cdn": "enabled",
+						testHeaderXContentType:  testValueStatic,
+						testHeaderXCacheControl: testValuePublicMaxAge,
+						"X-Cdn":                 testValueEnabled,
 					},
 					description: "Main CDN gets static content headers",
 				},
 				{
-					host: "images.cdn.example.com",
+					host: testHostImagesCDNExample,
 					expectedHeaders: map[string]string{
-						"X-Content-Type": "image",
-						"X-Cache-Control": "public, max-age=31536000, immutable",
-						"X-Compress": "gzip",
+						testHeaderXContentType:  testValueImage,
+						testHeaderXCacheControl: testValuePublicImmutable,
+						testHeaderXCompress:     testValueGzip,
 					},
 					description: "Image CDN gets aggressive caching headers",
 				},
 				{
-					host: "api.example.com",
+					host: testHostAPIExampleCom,
 					expectedHeaders: map[string]string{
-						"X-Content-Type": "api",
-						"X-Cache-Control": "no-cache",
-						"X-Rate-Limit": "10000/hour",
+						testHeaderXContentType:  testValueAPI2,
+						testHeaderXCacheControl: testValueNoCache,
+						testHeaderXRateLimit:    testValue10000PerHour,
 					},
 					description: "API gets no-cache headers",
 				},
+			},
 		},
-	},
-}
+	}
 
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			t.Logf("Testing scenario: %s", testCase.description)
-
-			for _, testReq := range testCase.testRequests {
-				t.Run(testReq.description, func(t *testing.T) {
-					// Test the request
-					headers := makeTestRequest(t, testCase.config, testReq.host)
-
-					// Verify expected headers are set
-					for expectedKey, expectedValue := range testReq.expectedHeaders {
-						actualValue, exists := headers[expectedKey]
-						if !exists {
-							t.Errorf("Expected header %q to be set for host %q", expectedKey, testReq.host)
-							continue
-						}
-
-						// For simplicity, we'll check the first value (headers are stored as slices)
-						if len(actualValue) == 0 || actualValue[0] != expectedValue {
-							t.Errorf("Header %q for host %q: expected %q, got %q",
-								expectedKey, testReq.host, expectedValue, actualValue)
-						}
-					}
-				})
-			}
+			runTestCase(t, testCase)
 		})
 	}
 }
 
-// TestIntegration_EdgeCases tests edge cases and boundary conditions.
-func TestIntegration_EdgeCases(t *testing.T) {
+// TestIntegrationEdgeCases tests edge cases and boundary conditions.
+func TestIntegrationEdgeCases(t *testing.T) {
 	tests := []struct {
 		name        string
 		config      *Config
@@ -256,50 +273,50 @@ func TestIntegration_EdgeCases(t *testing.T) {
 		expectPanic bool
 	}{
 		{
-			name: "Overlapping wildcard rules",
+			name:        "Overlapping wildcard rules",
 			description: "Test behavior with overlapping wildcard patterns",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts: []string{"*.example.com"},
-						Headers: map[string]string{"X-Level": "subdomain"},
+						Hosts:   []string{testHostWildcardExampleCom},
+						Headers: map[string]string{testHeaderXLevel: testValueSubdomain},
 					},
 					{
-						Hosts: []string{"*.api.example.com"},
-						Headers: map[string]string{"X-Level": "api-subdomain"},
+						Hosts:   []string{testHostAPIExampleComWildcard},
+						Headers: map[string]string{testHeaderXLevel: testValueAPISubdomain},
 					},
 				},
 			},
-			host: "v1.api.example.com",
+			host:        testHostV1APIExampleCom,
 			expectPanic: false,
 		},
 		{
-			name: "Unicode and special characters",
+			name:        "Unicode and special characters",
 			description: "Test hosts with unicode characters and special cases",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts: []string{"tést.example.com"},
-						Headers: map[string]string{"X-Unicode": "test"},
+						Hosts:   []string{testHostTestAccent},
+						Headers: map[string]string{testHeaderXUnicode: testValueTest},
 					},
 					{
-						Hosts: []string{"*.example.com"},
-						Headers: map[string]string{"X-Wildcard": "match"},
+						Hosts:   []string{testHostWildcardExampleCom},
+						Headers: map[string]string{testHeaderXWildcard: testValueMatch},
 					},
 				},
 			},
-			host: "tést.example.com",
+			host:        testHostTestAccent,
 			expectPanic: false,
 		},
 		{
-			name: "Empty configuration",
+			name:        "Empty configuration",
 			description: "Test with completely empty configuration",
-			config: &Config{Rules: []Rule{}},
-			host: "example.com",
+			config:      &Config{Rules: []Rule{}},
+			host:        testHostExampleCom,
 			expectPanic: false,
 		},
 		{
-			name: "Configuration with empty rule",
+			name:        "Configuration with empty rule",
 			description: "Test with rule that has empty hosts and headers",
 			config: &Config{
 				Rules: []Rule{
@@ -308,12 +325,12 @@ func TestIntegration_EdgeCases(t *testing.T) {
 						Headers: map[string]string{},
 					},
 					{
-						Hosts: []string{"example.com"},
-						Headers: map[string]string{"X-Test": "value"},
+						Hosts:   []string{testHostExampleCom},
+						Headers: map[string]string{testHeaderXTest: testValueValue},
 					},
 				},
 			},
-			host: "example.com",
+			host:        testHostExampleCom,
 			expectPanic: false,
 		},
 	}
@@ -341,8 +358,8 @@ func TestIntegration_EdgeCases(t *testing.T) {
 	}
 }
 
-// TestIntegration_PerformanceComplexConfig tests performance with complex configurations.
-func TestIntegration_PerformanceComplexConfig(t *testing.T) {
+// TestIntegrationPerformanceComplexConfig tests performance with complex configurations.
+func TestIntegrationPerformanceComplexConfig(t *testing.T) {
 	// Create a complex configuration with many rules
 	var rules []Rule
 	hostSuffixes := []string{".com", ".net", ".org", ".io", ".dev"}
@@ -365,9 +382,9 @@ func TestIntegration_PerformanceComplexConfig(t *testing.T) {
 
 	// Add some wildcard rules
 	rules = append(rules, Rule{
-		Hosts: []string{"*.example.com", "*.example.net"},
+		Hosts: []string{testHostWildcardExampleCom, testHostWildcardExampleNet},
 		Headers: map[string]string{
-			"X-Wildcard": "primary",
+			testHeaderXWildcard: testValuePrimary,
 		},
 	})
 
@@ -377,7 +394,7 @@ func TestIntegration_PerformanceComplexConfig(t *testing.T) {
 
 	// Test various hosts to ensure performance is acceptable
 	testHosts := []string{
-		"api.example.com",
+		testHostAPIExampleCom,
 		"admin.example.org",
 		"cdn.example.io",
 		"users.example.dev",
@@ -404,9 +421,9 @@ func TestIntegration_PerformanceComplexConfig(t *testing.T) {
 // Helper types and functions for integration tests
 
 type testRequest struct {
-	host             string
-	expectedHeaders  map[string]string
-	description      string
+	host            string
+	expectedHeaders map[string]string
+	description     string
 }
 
 // makeTestRequest creates and executes a test request, returning the headers.
@@ -414,7 +431,7 @@ func makeTestRequest(t *testing.T, config *Config, host string) map[string][]str
 	var capturedHeaders map[string][]string
 	next := headerCaptureHandler(&capturedHeaders)
 
-	handler, err := New(context.Background(), next, config, "integration-test")
+	handler, err := New(context.Background(), next, config, testPluginNameIntegration)
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}

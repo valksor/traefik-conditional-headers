@@ -2,11 +2,12 @@ package traefik_conditional_headers
 
 import (
 	"context"
+	"net/http"
 	"testing"
 )
 
-// Test_matchesHost tests the host matching function with various scenarios.
-func Test_matchesHost(t *testing.T) {
+// TestMatchesHost tests the host matching function with various scenarios.
+func TestMatchesHost(t *testing.T) {
 	tests := []struct {
 		name         string
 		incomingHost string
@@ -16,118 +17,118 @@ func Test_matchesHost(t *testing.T) {
 		// Exact matches
 		{
 			name:         "Exact match simple domain",
-			incomingHost: "example.com",
-			ruleHost:     "example.com",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostExampleCom,
 			expected:     true,
 		},
 		{
 			name:         "Exact match subdomain",
-			incomingHost: "api.example.com",
-			ruleHost:     "api.example.com",
+			incomingHost: testHostAPIExampleCom,
+			ruleHost:     testHostAPIExampleCom,
 			expected:     true,
 		},
 		{
 			name:         "No match different domain",
-			incomingHost: "example.com",
-			ruleHost:     "other.com",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostOtherCom,
 			expected:     false,
 		},
 
 		// Port handling
 		{
 			name:         "Host with port matches rule without port",
-			incomingHost: "example.com:8080",
-			ruleHost:     "example.com",
+			incomingHost: testHostExampleComWithPort,
+			ruleHost:     testHostExampleCom,
 			expected:     true,
 		},
-	
+
 		// Wildcard subdomain matching
 		{
 			name:         "Wildcard matches subdomain",
-			incomingHost: "api.example.com",
-			ruleHost:     "*.example.com",
+			incomingHost: testHostAPIExampleCom,
+			ruleHost:     testHostWildcardExampleCom,
 			expected:     true,
 		},
 		{
 			name:         "Wildcard matches nested subdomain",
-			incomingHost: "v1.api.example.com",
-			ruleHost:     "*.example.com",
+			incomingHost: testHostV1APIExampleCom,
+			ruleHost:     testHostWildcardExampleCom,
 			expected:     true,
 		},
 		{
 			name:         "Wildcard matches base domain",
-			incomingHost: "example.com",
-			ruleHost:     "*.example.com",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostWildcardExampleCom,
 			expected:     true,
 		},
 		{
 			name:         "Wildcard no match different domain",
 			incomingHost: "api.other.com",
-			ruleHost:     "*.example.com",
+			ruleHost:     testHostWildcardExampleCom,
 			expected:     false,
 		},
 
 		// Partial matching
 		{
 			name:         "Contains match partial string",
-			incomingHost: "my-api.example.com",
-			ruleHost:     "api",
+			incomingHost: testHostMyAPIExampleCom,
+			ruleHost:     testHostAPISubstring,
 			expected:     true,
 		},
 		{
 			name:         "Contains match at end",
-			incomingHost: "example.com",
-			ruleHost:     "com",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostCOMSubstring,
 			expected:     true,
 		},
 		{
 			name:         "Contains match at start",
-			incomingHost: "api.example.com",
-			ruleHost:     "api",
+			incomingHost: testHostAPIExampleCom,
+			ruleHost:     testHostAPISubstring,
 			expected:     true,
 		},
 		{
 			name:         "Contains no match",
-			incomingHost: "example.com",
-			ruleHost:     "test",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostTestSubstring,
 			expected:     false,
 		},
 
 		// Edge cases
 		{
 			name:         "Empty incoming host",
-			incomingHost: "",
-			ruleHost:     "example.com",
+			incomingHost: testHostEmpty,
+			ruleHost:     testHostExampleCom,
 			expected:     false,
 		},
 		{
 			name:         "Empty rule host",
-			incomingHost: "example.com",
-			ruleHost:     "",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostEmpty,
 			expected:     true, // Empty string contains everything
 		},
 		{
 			name:         "Both empty",
-			incomingHost: "",
-			ruleHost:     "",
+			incomingHost: testHostEmpty,
+			ruleHost:     testHostEmpty,
 			expected:     true, // Empty string contains empty string
 		},
 		{
 			name:         "Incoming host with port only",
-			incomingHost: ":8080",
-			ruleHost:     "example.com",
+			incomingHost: testHostPortOnly,
+			ruleHost:     testHostExampleCom,
 			expected:     false,
 		},
 		{
 			name:         "Wildcard rule only",
-			incomingHost: "example.com",
-			ruleHost:     "*",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostWildcardOnly,
 			expected:     false,
 		},
 		{
 			name:         "Rule starts with dot",
-			incomingHost: "example.com",
-			ruleHost:     ".example.com",
+			incomingHost: testHostExampleCom,
+			ruleHost:     testHostDotExampleCom,
 			expected:     false,
 		},
 	}
@@ -160,6 +161,31 @@ func TestCreateConfig(t *testing.T) {
 	}
 }
 
+// validateHandlerCreation validates the result of New() function calls.
+func validateHandlerCreation(t *testing.T, handler http.Handler, err error, expectError bool) {
+	if expectError {
+		if err == nil {
+			t.Error("Expected error but got none")
+		}
+		return
+	}
+
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+		return
+	}
+
+	if handler == nil {
+		t.Error("New() returned nil handler")
+		return
+	}
+
+	// Verify the handler implements http.Handler
+	if _, ok := handler.(*conditionalHeaders); !ok {
+		t.Error("New() did not return conditionalHeaders handler")
+	}
+}
+
 // TestNew tests the plugin constructor.
 func TestNew(t *testing.T) {
 	tests := []struct {
@@ -173,12 +199,12 @@ func TestNew(t *testing.T) {
 			expectError: false,
 		},
 		{
-			name:   "Valid config with rules",
+			name: "Valid config with rules",
 			config: &Config{
 				Rules: []Rule{
 					{
-						Hosts:   []string{"example.com"},
-						Headers: map[string]string{"X-Test": "value"},
+						Hosts:   []string{testHostExampleCom},
+						Headers: map[string]string{testHeaderXTest: testValueValue},
 					},
 				},
 			},
@@ -194,45 +220,24 @@ func TestNew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			next := mockNextHandler()
-			handler, err := New(context.Background(), next, tt.config, "test-plugin")
-
-			if tt.expectError {
-				if err == nil {
-					t.Error("Expected error but got none")
-				}
-				return
-			}
-
-			if err != nil {
-				t.Errorf("Unexpected error: %v", err)
-				return
-			}
-
-			if handler == nil {
-				t.Error("New() returned nil handler")
-				return
-			}
-
-			// Verify the handler implements http.Handler
-			if _, ok := handler.(*conditionalHeaders); !ok {
-				t.Error("New() did not return conditionalHeaders handler")
-			}
+			handler, err := New(context.Background(), next, tt.config, testPluginNameWithDash)
+			validateHandlerCreation(t, handler, err, tt.expectError)
 		})
 	}
 }
 
-// Test_conditionalHeaders_fields tests the internal state of the handler.
-func Test_conditionalHeaders_fields(t *testing.T) {
+// TestConditionalHeadersFields tests the internal state of the handler.
+func TestConditionalHeadersFields(t *testing.T) {
 	rules := []Rule{
 		{
-			Hosts:   []string{"example.com"},
-			Headers: map[string]string{"X-Test": "value"},
+			Hosts:   []string{testHostExampleCom},
+			Headers: map[string]string{testHeaderXTest: testValueValue},
 		},
 	}
 
 	config := &Config{Rules: rules}
 	next := mockNextHandler()
-	handler, err := New(context.Background(), next, config, "test-plugin")
+	handler, err := New(context.Background(), next, config, testPluginNameWithDash)
 
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
@@ -251,8 +256,8 @@ func Test_conditionalHeaders_fields(t *testing.T) {
 		t.Errorf("Handler rules length: got %d, want 1", len(conditionalHandler.rules))
 	}
 
-	if conditionalHandler.name != "test-plugin" {
-		t.Errorf("Handler name: got %q, want %q", conditionalHandler.name, "test-plugin")
+	if conditionalHandler.name != testPluginNameWithDash {
+		t.Errorf("Handler name: got %q, want %q", conditionalHandler.name, testPluginNameWithDash)
 	}
 
 	// Verify rule content
@@ -260,26 +265,26 @@ func Test_conditionalHeaders_fields(t *testing.T) {
 		t.Errorf("Rule hosts length: got %d, want 1", len(conditionalHandler.rules[0].Hosts))
 	}
 
-	if conditionalHandler.rules[0].Hosts[0] != "example.com" {
-		t.Errorf("Rule host: got %q, want %q", conditionalHandler.rules[0].Hosts[0], "example.com")
+	if conditionalHandler.rules[0].Hosts[0] != testHostExampleCom {
+		t.Errorf("Rule host: got %q, want %q", conditionalHandler.rules[0].Hosts[0], testHostExampleCom)
 	}
 
-	if conditionalHandler.rules[0].Headers["X-Test"] != "value" {
-		t.Errorf("Rule header: got %q, want %q", conditionalHandler.rules[0].Headers["X-Test"], "value")
+	if conditionalHandler.rules[0].Headers[testHeaderXTest] != testValueValue {
+		t.Errorf("Rule header: got %q, want %q", conditionalHandler.rules[0].Headers[testHeaderXTest], testValueValue)
 	}
 }
 
-// Benchmark_matchesHost benchmarks the host matching function.
-func Benchmark_matchesHost(b *testing.B) {
+// BenchmarkMatchesHost benchmarks the host matching function.
+func BenchmarkMatchesHost(b *testing.B) {
 	testCases := []struct {
 		name         string
 		incomingHost string
 		ruleHost     string
 	}{
-		{"Exact match", "example.com", "example.com"},
-		{"Wildcard match", "api.example.com", "*.example.com"},
-		{"Contains match", "api.example.com", "api"},
-		{"No match", "example.com", "other.com"},
+		{"Exact match", testHostExampleCom, testHostExampleCom},
+		{"Wildcard match", testHostAPIExampleCom, testHostWildcardExampleCom},
+		{"Contains match", testHostAPIExampleCom, testHostAPISubstring},
+		{"No match", testHostExampleCom, testHostOtherCom},
 	}
 
 	for _, tc := range testCases {
