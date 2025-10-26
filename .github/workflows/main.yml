@@ -66,6 +66,12 @@ jobs:
       - name: Lint and Tests
         run: make
 
+      - name: Upload coverage to Qlty
+        uses: qltysh/qlty-action/coverage@v2
+        with:
+          token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
+          files: coverage.out
+
       - name: Run tests with Yaegi
         run: make yaegi_test
         env:

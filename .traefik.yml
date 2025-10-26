@@ -2,10 +2,13 @@ displayName: Conditional Headers
 type: middleware
 import: github.com/valksor/traefik-conditional-headers
 summary: Set headers conditionally based on hostname (supports multiple hosts per rule)
-iconPath: .assets/logo.jpg
+iconPath: .assets/logo.png
 
+# Test data for Traefik Plugin Catalog validation
+# This demonstrates various configuration scenarios and edge cases
 testData:
   rules:
+    # Basic exact matching with multiple hosts
     - hosts:
         - demo.dev.io
         - test.demo.dev.io
@@ -13,8 +16,243 @@ testData:
       headers:
         X-App-Kernel-Name: demo.valksor.com
         X-Environment: production
+        X-Service-Type: "demo"
+
+    # Wildcard subdomain matching
     - hosts:
         - "*.internal.dev.io"
+        - "*.staging.internal.dev.io"
       headers:
         X-App-Kernel-Name: internal.valksor.com
         X-Environment: internal
+        X-Network: "private"
+        X-Debug: "true"
+
+    # API versioning and routing
+    - hosts:
+        - "v1.api.company.com"
+        - "api-v1.company.com"
+        - "legacy.api.company.com"
+      headers:
+        X-API-Version: "v1"
+        X-API-Deprecated: "true"
+        X-API-Sunset: "2024-12-31"
+        X-Rate-Limit: "1000/hour"
+        X-Features: "basic,read-only"
+
+    # Production API endpoints
+    - hosts:
+        - "api.company.com"
+        - "v2.api.company.com"
+        - "graphql.company.com"
+      headers:
+        X-API-Version: "v2"
+        X-API-Latest: "true"
+        X-Environment: "production"
+        X-Rate-Limit: "10000/hour"
+        X-Features: "advanced,caching,webhooks,real-time"
+        X-Cache-Control: "no-cache"
+
+    # Development environment wildcard matching
+    - hosts:
+        - "*.dev.company.com"
+        - "dev-api.company.com"
+        - "dev-admin.company.com"
+      headers:
+        X-Environment: "development"
+        X-Debug: "true"
+        X-Log-Level: "debug"
+        X-CORS: "*"
+        X-Source-Maps: "enabled"
+        X-Hot-Reload: "true"
+
+    # Staging environment configuration
+    - hosts:
+        - "*.staging.company.com"
+        - "staging-api.company.com"
+        - "staging.company.com"
+      headers:
+        X-Environment: "staging"
+        X-Debug: "true"
+        X-Log-Level: "info"
+        X-CORS: "https://company.com"
+        X-Feature-Flags: "new-ui,beta-features"
+
+    # CDN and static asset handling
+    - hosts:
+        - "images.cdn.company.com"
+        - "img.cdn.company.com"
+        - "photos.cdn.company.com"
+        - "media.cdn.company.com"
+      headers:
+        X-Content-Type: "image"
+        X-Cache-Control: "public, max-age=31536000, immutable"
+        X-Compress: "gzip"
+        X-CDN-Provider: "cloudflare"
+        X-Storage: "s3"
+
+    # Static files and assets
+    - hosts:
+        - "static.cdn.company.com"
+        - "assets.cdn.company.com"
+        - "js.cdn.company.com"
+        - "css.cdn.company.com"
+        - "fonts.cdn.company.com"
+      headers:
+        X-Content-Type: "static"
+        X-Cache-Control: "public, max-age=86400"
+        X-Compress: "gzip,br"
+        X-CDN-Provider: "fastly"
+        X-Brotli: "enabled"
+
+    # Multi-tenant enterprise tier
+    - hosts:
+        - "*.enterprise.company.com"
+        - "company.enterprise.com"
+        - "admin.enterprise.com"
+      headers:
+        X-Tenant-Type: "enterprise"
+        X-Features: "advanced,unlimited,priority-support,custom-integrations"
+        X-Rate-Limit: "100000/hour"
+        X-Storage-Quota: "10TB"
+        X-Support-Level: "24/7"
+        X-SLA: "99.99%"
+
+    # Professional tier tenants
+    - hosts:
+        - "*.pro.company.com"
+        - "company.pro.com"
+        - "api.pro.com"
+      headers:
+        X-Tenant-Type: "professional"
+        X-Features: "standard,api-access,email-support,advanced-analytics"
+        X-Rate-Limit: "50000/hour"
+        X-Storage-Quota: "1TB"
+        X-Support-Level: "business-hours"
+        X-SLA: "99.9%"
+
+    # Basic tier tenants
+    - hosts:
+        - "*.company.com"
+        - "app.company.com"
+        - "www.company.com"
+      headers:
+        X-Tenant-Type: "basic"
+        X-Features: "basic,limited,community-support"
+        X-Rate-Limit: "10000/hour"
+        X-Storage-Quota: "100GB"
+        X-Support-Level: "community"
+
+    # Authentication and authorization services
+    - hosts:
+        - "auth.company.com"
+        - "login.company.com"
+        - "sso.company.com"
+        - "oauth.company.com"
+      headers:
+        X-Service-Type: "authentication"
+        X-Auth-Required: "false"
+        X-Public: "true"
+        X-Security: "high"
+        X-Session-Timeout: "3600"
+        X-MFA: "required"
+
+    # User management services
+    - hosts:
+        - "users.company.com"
+        - "profile.company.com"
+        - "account.company.com"
+      headers:
+        X-Service-Type: "user-management"
+        X-Auth-Required: "true"
+        X-Rate-Limit: "5000/hour"
+        X-Personal-Data: "protected"
+        X-GDPR: "compliant"
+        X-Data-Retention: "7-years"
+
+    # Administrative interfaces
+    - hosts:
+        - "admin.company.com"
+        - "admin-api.company.com"
+        - "console.company.com"
+        - "dashboard.company.com"
+      headers:
+        X-Service-Type: "administration"
+        X-Auth-Required: "true"
+        X-Role-Required: "admin"
+        X-Audit-Log: "true"
+        X-Security: "maximum"
+        X-2FA: "required"
+        X-IP-Whitelist: "enabled"
+
+    # Internal microservices (wildcard catch-all)
+    - hosts:
+        - "*.service.local"
+        - "*.svc.local"
+        - "*.internal.company.com"
+      headers:
+        X-Cluster: "production"
+        X-Datacenter: "us-west-2"
+        X-Network: "internal"
+        X-Monitoring: "prometheus"
+        X-Tracing: "jaeger"
+        X-Service-Mesh: "istio"
+
+    # Performance and monitoring endpoints
+    - hosts:
+        - "metrics.company.com"
+        - "monitoring.company.com"
+        - "health.company.com"
+        - "status.company.com"
+      headers:
+        X-Service-Type: "monitoring"
+        X-Public: "limited"
+        X-Access-Control: "internal"
+        X-Metrics: "prometheus"
+        X-Alerts: "pagerduty"
+        X-Health-Check: "enabled"
+
+    # Edge case: Partial matching (use with caution)
+    - hosts:
+        - "api"
+        - "service"
+        - "app"
+      headers:
+        X-Match-Type: "partial"
+        X-Fallback: "true"
+        X-Warning: "partial-match-configuration"
+
+    # Edge case: Single character patterns
+    - hosts:
+        - "a.company.com"
+        - "b.company.com"
+        - "x.company.com"
+      headers:
+        X-Pattern-Type: "single-character"
+        X-Test-Scenario: "edge-case"
+
+    # Edge case: Numeric subdomains
+    - hosts:
+        - "v1.company.com"
+        - "v2.company.com"
+        - "api-v3.company.com"
+        - "test123.company.com"
+      headers:
+        X-Pattern-Type: "numeric"
+        X-Version-Strategy: "semantic"
+        X-Test-Scenario: "numeric-hosts"
+
+# Additional configuration examples for documentation
+# These show CLI equivalents for complex scenarios
+
+# CLI equivalent example:
+# traefik \
+#   --middlewares.conditional-headers.plugin.conditional-headers.rules[0].hosts[0]=demo.dev.io \
+#   --middlewares.conditional-headers.plugin.conditional-headers.rules[0].hosts[1]=test.demo.dev.io \
+#   --middlewares.conditional-headers.plugin.conditional-headers.rules[0].headers.X-App-Kernel-Name=demo.valksor.com \
+#   --middlewares.conditional-headers.plugin.conditional-headers.rules[0].headers.X-Environment=production
+
+# Docker Compose example:
+# labels:
+#   - "traefik.http.middlewares.conditional-headers.plugin.conditional-headers.rules[0].hosts[0]=demo.dev.io"
+#   - "traefik.http.middlewares.conditional-headers.plugin.conditional-headers.rules[0].headers.X-Environment=production"
