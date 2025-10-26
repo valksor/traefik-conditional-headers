@@ -43,7 +43,7 @@ func executeTestRequest(t *testing.T, rules []Rule, requestHost string) (map[str
 	config := &Config{Rules: rules}
 	handler, err := New(context.Background(), next, config, "test")
 	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
+		t.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(requestHost)
@@ -53,7 +53,7 @@ func executeTestRequest(t *testing.T, rules []Rule, requestHost string) (map[str
 
 	// Verify response
 	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("Expected status %d, got %d", http.StatusOK, responseRecorder.Code)
+		t.Errorf(testMsgExpectedStatus, http.StatusOK, responseRecorder.Code)
 	}
 
 	return capturedHeaders, responseRecorder
@@ -173,7 +173,7 @@ func TestConditionalHeadersServeHTTPRequestFlow(t *testing.T) {
 
 	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
+		t.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(testHostExampleCom)
@@ -188,7 +188,7 @@ func TestConditionalHeadersServeHTTPRequestFlow(t *testing.T) {
 
 	// Verify response
 	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("Expected status %d, got %d", http.StatusOK, responseRecorder.Code)
+		t.Errorf(testMsgExpectedStatus, http.StatusOK, responseRecorder.Code)
 	}
 
 	expectedBody := testResponseNextCalled
@@ -213,7 +213,7 @@ func TestConditionalHeadersServeHTTPNoRules(t *testing.T) {
 	config := &Config{Rules: []Rule{}}
 	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
+		t.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(testHostExampleCom)
@@ -226,7 +226,7 @@ func TestConditionalHeadersServeHTTPNoRules(t *testing.T) {
 	}
 
 	if responseRecorder.Code != http.StatusOK {
-		t.Errorf("Expected status %d, got %d", http.StatusOK, responseRecorder.Code)
+		t.Errorf(testMsgExpectedStatus, http.StatusOK, responseRecorder.Code)
 	}
 }
 
@@ -243,7 +243,7 @@ func TestConditionalHeadersServeHTTPNilNext(t *testing.T) {
 
 	handler, err := New(context.Background(), nil, config, testPluginName)
 	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
+		t.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(testHostExampleCom)
@@ -279,7 +279,7 @@ func TestConditionalHeadersMultipleHeaders(t *testing.T) {
 	next := mockNextHandler()
 	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
-		t.Fatalf("Failed to create handler: %v", err)
+		t.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(testHostAPIExampleCom)
@@ -310,7 +310,7 @@ func BenchmarkConditionalHeadersServeHTTP(b *testing.B) {
 	next := mockNextHandler()
 	handler, err := New(context.Background(), next, config, testPluginName)
 	if err != nil {
-		b.Fatalf("Failed to create handler: %v", err)
+		b.Fatalf(testMsgFailedToCreateHandler, err)
 	}
 
 	req := createTestRequest(testHostAPIExampleCom)

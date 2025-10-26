@@ -130,6 +130,16 @@ const (
 	testResponseNextCalled = "Next handler called"
 )
 
+// Error message constants.
+const (
+	testMsgFailedToCreateHandler = "Failed to create handler: %v"
+)
+
+// Test assertion message constants.
+const (
+	testMsgExpectedStatus = "Expected status %d, got %d"
+)
+
 // Misc test constants.
 const (
 	testURLPath = "/test"
