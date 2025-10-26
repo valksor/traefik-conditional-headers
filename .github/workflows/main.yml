@@ -16,10 +16,7 @@ jobs:
       GOLANGCI_LINT_VERSION: v2.5.0
       YAEGI_VERSION: v0.16.1
       CGO_ENABLED: 0
-    defaults:
-      run:
-        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
-
+    
     steps:
 
       # https://github.com/marketplace/actions/setup-go-environment
@@ -32,7 +29,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v5
         with:
-          path: go/src/github.com/${{ github.repository }}
           fetch-depth: 0
 
       # https://golangci-lint.run/usage/install#other-ci
@@ -42,9 +38,7 @@ jobs:
       - name: Install Yaegi ${{ env.YAEGI_VERSION }}
         run: curl -sfL https://raw.githubusercontent.com/traefik/yaegi/master/install.sh | bash -s -- -b $(go env GOPATH)/bin ${YAEGI_VERSION}
 
-      - name: Setup GOPATH
-        run: go env -w GOPATH=${{ github.workspace }}/go
-
+      
       - name: Check and get dependencies
         run: |
           go mod tidy
@@ -61,7 +55,7 @@ jobs:
         uses: qltysh/qlty-action/coverage@v2
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-          files: "**/coverage.out"
+          files: "coverage.out"
 
       - name: Run tests with Yaegi
         run: make yaegi_test
