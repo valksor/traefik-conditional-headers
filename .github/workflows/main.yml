@@ -61,8 +61,7 @@ jobs:
         uses: qltysh/qlty-action/coverage@v2
         with:
           token: ${{ secrets.QLTY_COVERAGE_TOKEN }}
-          files: coverage.out
-        working-directory: ${{ github.workspace }}/go/src/github.com/${{ github.repository }}
+          files: go/src/github.com/${{ github.repository }}/coverage.out
 
       - name: Run tests with Yaegi
         run: make yaegi_test
