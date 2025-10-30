@@ -2,3 +2,4 @@
 .mcp.json
 *.out
 coverage.html
+.serena/
