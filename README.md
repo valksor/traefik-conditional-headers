@@ -1,5 +1,7 @@
 # Conditional Headers Plugin for Traefik
 
+[![codecov](https://codecov.io/gh/valksor/traefik-conditional-headers/graph/badge.svg?token=NA9V1XQ55F)](https://codecov.io/gh/valksor/traefik-conditional-headers)
+
 A Traefik middleware plugin that sets HTTP request headers conditionally based on the incoming hostname. Supports multiple hosts sharing the same header configuration with flexible matching strategies.
 
 ## Features
@@ -501,14 +503,6 @@ curl -H "Host: api.example.com" http://localhost:8080 \
 ```
 
 ## Compatibility
-
-### Traefik Version Support
-
-| Plugin Version | Traefik Version | Status | Release Date |
-|---------------|-----------------|--------|--------------|
-| v0.0.3        | v3.0+           | ✅ Current | 2025-10-26 |
-| v0.0.2        | v3.0+           | ⚠️ Legacy | 2025-10-26 |
-| v0.0.1        | v3.0+           | ⚠️ Legacy | 2025-10-26 |
 
 ### Platform Support
 
