@@ -1,6 +1,7 @@
 # Conditional Headers Plugin for Traefik
 
-[![codecov](https://codecov.io/gh/valksor/traefik-conditional-headers/graph/badge.svg?token=NA9V1XQ55F)](https://codecov.io/gh/valksor/traefik-conditional-headers)
+[![BSD-3-Clause](https://img.shields.io/badge/BSD--3--Clause-green?style=flat)](https://github.com/valksor/php-bundle/blob/master/LICENSE)
+[![Coverage Status](https://coveralls.io/repos/github/valksor/traefik-conditional-headers/badge.svg?branch=master)](https://coveralls.io/github/valksor/traefik-conditional-headers?branch=master)
 
 A Traefik middleware plugin that sets HTTP request headers conditionally based on the incoming hostname. Supports multiple hosts sharing the same header configuration with flexible matching strategies.
 

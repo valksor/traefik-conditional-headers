@@ -11,10 +11,7 @@ test:
 	go test -v -cover ./...
 
 coverage:
-	@go test -coverprofile=coverage.tmp ./...
-	@grep -v "test_utils.go" coverage.tmp > coverage.out || true
-	@rm -f coverage.tmp
-	@echo "Coverage report generated (excluding test_utils.go): coverage.out"
+	go test -race -covermode atomic -coverprofile=covprofile ./...
 
 coverage-html: coverage
 	go tool cover -html=coverage.out -o coverage.html
