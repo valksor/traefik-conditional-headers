@@ -15,7 +15,6 @@ coverage:
 
 coverage-html: coverage
 	go tool cover -html=coverage.out -o coverage.html
-	@echo "Coverage report generated: coverage.html"
 
 yaegi_test:
 	yaegi test -v .
