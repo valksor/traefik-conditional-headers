@@ -10,7 +10,7 @@ jobs:
 
   main:
     name: Main Process
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     env:
       GO_VERSION: 1.24
       GOLANGCI_LINT_VERSION: v2.6.1
