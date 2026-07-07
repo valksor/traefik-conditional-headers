@@ -144,6 +144,7 @@ func (c *conditionalHeaders) ServeHTTP(responseWriter http.ResponseWriter, reque
 				if c.next != nil {
 					c.next.ServeHTTP(responseWriter, request)
 				}
+
 				return // Stop processing rules after first match
 			}
 		}

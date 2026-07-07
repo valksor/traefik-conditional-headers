@@ -163,20 +163,25 @@ func TestCreateConfig(t *testing.T) {
 
 // validateHandlerCreation validates the result of New() function calls.
 func validateHandlerCreation(t *testing.T, handler http.Handler, err error, expectError bool) {
+	t.Helper()
+
 	if expectError {
 		if err == nil {
 			t.Error("Expected error but got none")
 		}
+
 		return
 	}
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
+
 		return
 	}
 
 	if handler == nil {
 		t.Error("New() returned nil handler")
+
 		return
 	}
 
@@ -238,7 +243,6 @@ func TestConditionalHeadersFields(t *testing.T) {
 	config := &Config{Rules: rules}
 	next := mockNextHandler()
 	handler, err := New(context.Background(), next, config, testPluginNameWithDash)
-
 	if err != nil {
 		t.Fatalf("Failed to create handler: %v", err)
 	}
@@ -289,7 +293,7 @@ func BenchmarkMatchesHost(b *testing.B) {
 
 	for _, tc := range testCases {
 		b.Run(tc.name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
+			for range b.N {
 				matchesHost(tc.incomingHost, tc.ruleHost)
 			}
 		})
