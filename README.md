@@ -542,8 +542,8 @@ We welcome contributions! Here's how to get started:
    - Traefik v3.0+
    - `golangci-lint` **v2.12.2** and `gawk` (required by `make`):
      ```bash
-     # golangci-lint v2.12.2
-     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.12.2
+     # golangci-lint v2.12.2 (installed from source via the Go module proxy)
+     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
      # gawk
      brew install gawk        # macOS
      sudo apt-get install -y gawk   # Debian/Ubuntu
