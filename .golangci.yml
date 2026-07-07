@@ -1,121 +1,136 @@
 version: "2"
 
+run:
+  timeout: 5m
+  exclude-dirs:
+    - .claude
+    - v1
+
+formatters:
+  enable:
+    - gofumpt
+
 linters:
   enable:
     - asasalint
     - asciicheck
     - bidichk
-    - bodyclose
+    - bodyclose # HTTP body close
+    - canonicalheader
+    - containedctx
     - contextcheck
     - copyloopvar
-    - cyclop
     - decorder
-    - dupl
-    - errcheck
+    - dogsled
+    - dupword
+    - durationcheck
+    - embeddedstructfieldcheck
+    - errcheck # Unchecked errors
+    - errchkjson
+    - errname
     - errorlint
     - exhaustive
-    - exhaustruct
-    - gocognit
-    - gocyclo
+    - exptostd
+    - fatcontext
+    - forcetypeassert
+    - gocheckcompilerdirectives
+    - gocritic # Advanced checks
     - godot
-    - gosec
-    - govet
+    - godox
+    - goprintffuncname
+    - gosec # Security issues
+    - govet # Built-in vet
+    - grouper
+    - iface
+    - inamedparam
     - ineffassign
-    - misspell
+    - interfacebloat
+    - intrange
+    - iotamixing
+    - loggercheck
+    - makezero
+    - mirror
+    - misspell # Typos in comments/strings
     - musttag
-    - nestif
+    - nakedret
     - nilerr
+    - nilnesserr
+    - nilnil
+    - nlreturn
     - noctx
-    - prealloc
-    - revive
+    - nolintlint # Enforce nolint comments
+    - nonamedreturns
+    - perfsprint
+    - predeclared
+    - protogetter
+    - reassign
+    - recvcheck
     - rowserrcheck
+    - sloglint
     - sqlclosecheck
-    - staticcheck
+    - staticcheck # Go vet++
+    - testableexamples
+    - thelper
+    - unconvert # Unnecessary conversions
     - unparam
     - unused
-    - varnamelen
+    - usestdlibvars
+    - usetesting
     - wastedassign
     - whitespace
-    - wrapcheck
+    - gochecksumtype
+    - goconst
+    - importas
+    - modernize
+    - nosprintfhostport
+    - prealloc
+    - tparallel
+
   settings:
-    revive:
-      rules:
-        - name: exported
-          severity: warning
-          disabled: false
-          exclude: [ "" ]
-          arguments:
-            - disable-checks-on-functions
-            - disable-checks-on-methods
-            - disable-checks-on-types
-            - disable-checks-on-variables
-            - disable-checks-on-constants
-        - name: confusing-naming
-          severity: warning
-          disabled: false
-        - name: datarace
-          severity: warning
-          disabled: false
-        - name: deep-exit
-          severity: warning
-          disabled: false
-        - name: early-return
-          severity: warning
-          disabled: false
-        - name: empty-block
-          severity: warning
-          disabled: false
-        - name: empty-lines
-          severity: warning
-          disabled: false
-        - name: error-naming
-          severity: warning
-          disabled: false
-        - name: error-return
-          severity: warning
-          disabled: false
-        - name: get-return
-          severity: warning
-          disabled: false
-        - name: identical-branches
-          severity: warning
-          disabled: false
-        - name: import-shadowing
-          severity: warning
-          disabled: false
-        - name: optimize-operands-order
-          severity: warning
-          disabled: false
-        - name: redefines-builtin-id
-          severity: warning
-          disabled: false
-        - name: redundant-import-alias
-          severity: warning
-          disabled: false
-        - name: string-of-int
-          severity: warning
-          disabled: false
-        - name: superfluous-else
-          severity: warning
-          disabled: false
-        - name: unchecked-type-assertion
-          severity: warning
-          disabled: false
-        - name: unconditional-recursion
-          severity: warning
-          disabled: false
-        - name: unhandled-error
-          severity: warning
-          disabled: false
-        - name: unreachable-code
-          severity: warning
-          disabled: false
-        - name: use-any
-          severity: warning
-          disabled: false
-        - name: use-errors-new
-          severity: warning
-          disabled: false
+    goconst:
+      min-occurrences: 5
+      ignore-tests: true
+    errchkjson:
+      # Only report json.Marshal calls that can genuinely fail (unsafe types).
+      # Safe types like plain structs and map[string]string are ignored.
+      check-error-free-encoding: false
+    gofumpt:
+      extra-rules: true
+    gocritic:
+      disabled-checks:
+        - ifElseChain
+        - elseif
+        - appendAssign
+        - assignOp
+        - unlambda
+    gosec:
+      excludes:
+        - G101 # Hardcoded credentials - false positive on config key mappings
+        - G104
+        - G115 # Integer overflow - file descriptors are small positive integers
+        - G118 # Background context in goroutines - lifecycle contexts intentionally outlive requests
+        - G204
+        - G301
+        - G302
+        - G304
+        - G306
+        - G702 # Command injection via taint - user-controlled $EDITOR resolved through exec.LookPath
+        - G703 # Path traversal via taint - paths are validated by ValidatePathWithRoots
+        - G704 # SSRF via taint - false positives on hardcoded API URLs and Unix sockets
+        - G706 # Log injection via taint - slog properly escapes structured values
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - errchkjson
+        - gosec
+    - path: testutils/*.go
+      linters:
+        - errcheck
+        - errchkjson
+        - gosec
 
 output:
   path-mode: "abs"

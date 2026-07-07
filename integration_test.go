@@ -8,10 +8,13 @@ import (
 
 // assertExpectedHeaders validates that expected headers are present in actual headers.
 func assertExpectedHeaders(t *testing.T, host string, expectedHeaders map[string]string, actualHeaders map[string][]string) {
+	t.Helper()
+
 	for expectedKey, expectedValue := range expectedHeaders {
 		actualValue, exists := actualHeaders[expectedKey]
 		if !exists {
 			t.Errorf("Expected header %q to be set for host %q", expectedKey, host)
+
 			continue
 		}
 
@@ -25,6 +28,8 @@ func assertExpectedHeaders(t *testing.T, host string, expectedHeaders map[string
 
 // validateTestRequest executes a test request and validates expected headers.
 func validateTestRequest(t *testing.T, config *Config, testReq testRequest) {
+	t.Helper()
+
 	headers := makeTestRequest(t, config, testReq.host)
 	assertExpectedHeaders(t, testReq.host, testReq.expectedHeaders, headers)
 }
@@ -35,7 +40,10 @@ func runTestCase(t *testing.T, testCase struct {
 	config       *Config
 	testRequests []testRequest
 	description  string
-}) {
+},
+) {
+	t.Helper()
+
 	t.Logf("Testing scenario: %s", testCase.description)
 
 	for _, testReq := range testCase.testRequests {
@@ -361,9 +369,9 @@ func TestIntegrationEdgeCases(t *testing.T) {
 // TestIntegrationPerformanceComplexConfig tests performance with complex configurations.
 func TestIntegrationPerformanceComplexConfig(t *testing.T) {
 	// Create a complex configuration with many rules
-	var rules []Rule
 	hostSuffixes := []string{".com", ".net", ".org", ".io", ".dev"}
 	subdomains := []string{"api", "admin", "cdn", "static", "auth", "users", "blog", "shop"}
+	rules := make([]Rule, 0, len(subdomains)*len(hostSuffixes)+1)
 
 	// Generate many rules
 	for suffixIndex, suffix := range hostSuffixes {
@@ -405,7 +413,7 @@ func TestIntegrationPerformanceComplexConfig(t *testing.T) {
 	for _, host := range testHosts {
 		t.Run("Performance test for "+host, func(t *testing.T) {
 			// Run multiple iterations to check performance
-			for i := 0; i < 100; i++ {
+			for range 100 {
 				start := testing.AllocsPerRun(1, func() {
 					makeTestRequest(t, config, host)
 				})
@@ -428,6 +436,8 @@ type testRequest struct {
 
 // makeTestRequest creates and executes a test request, returning the headers.
 func makeTestRequest(t *testing.T, config *Config, host string) map[string][]string {
+	t.Helper()
+
 	var capturedHeaders map[string][]string
 	next := headerCaptureHandler(&capturedHeaders)
 

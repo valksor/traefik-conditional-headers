@@ -9,6 +9,8 @@ import (
 
 // verifyExpectedHeaders checks that the expected headers were set correctly.
 func verifyExpectedHeaders(t *testing.T, capturedHeaders map[string][]string, expectedHeaders map[string]string) {
+	t.Helper()
+
 	if len(capturedHeaders) == 0 {
 		t.Error("Expected headers to be set, but none were captured")
 	}
@@ -17,6 +19,7 @@ func verifyExpectedHeaders(t *testing.T, capturedHeaders map[string][]string, ex
 		values, exists := capturedHeaders[expectedKey]
 		if !exists {
 			t.Errorf("Expected header %q to be set", expectedKey)
+
 			continue
 		}
 		if len(values) != 1 || values[0] != expectedValue {
@@ -27,6 +30,8 @@ func verifyExpectedHeaders(t *testing.T, capturedHeaders map[string][]string, ex
 
 // verifyNoUnexpectedHeaders checks that no unexpected headers were set.
 func verifyNoUnexpectedHeaders(t *testing.T, capturedHeaders map[string][]string) {
+	t.Helper()
+
 	for header := range capturedHeaders {
 		// Skip standard headers that might be set by the test infrastructure
 		if header != "User-Agent" && header != "Accept-Encoding" {
@@ -37,6 +42,8 @@ func verifyNoUnexpectedHeaders(t *testing.T, capturedHeaders map[string][]string
 
 // executeTestRequest creates a handler and executes a test request.
 func executeTestRequest(t *testing.T, rules []Rule, requestHost string) (map[string][]string, *httptest.ResponseRecorder) {
+	t.Helper()
+
 	var capturedHeaders map[string][]string
 	next := headerCaptureHandler(&capturedHeaders)
 
@@ -317,7 +324,7 @@ func BenchmarkConditionalHeadersServeHTTP(b *testing.B) {
 	responseRecorder := createTestResponse()
 
 	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for range b.N {
 		responseRecorder.Body.Reset()
 		handler.ServeHTTP(responseRecorder, req)
 	}

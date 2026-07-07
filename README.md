@@ -110,9 +110,16 @@ cd traefik-conditional-headers
 # Run tests
 go test -v ./...
 
-# Run linting
-golangci-lint run
+# Run the full quality gate + tests + coverage (default target)
+make
+
+# Non-mutating lint only
+make lint
 ```
+
+> Requires `golangci-lint` v2.12.2 and `gawk`; run `make tools` to install `goimports`/`gofumpt`.
+> See [Contributing → Development Setup](#development-setup-1) for details. `make`/`make quality`
+> reformat files in place.
 
 #### Local Development
 
@@ -530,9 +537,21 @@ We welcome contributions! Here's how to get started:
 ### Development Setup
 
 1. **Prerequisites**:
-   - Go 1.24+
+   - Go 1.26+
    - Docker
    - Traefik v3.0+
+   - `golangci-lint` **v2.12.2** and `gawk` (required by `make`):
+     ```bash
+     # golangci-lint v2.12.2
+     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.12.2
+     # gawk
+     brew install gawk        # macOS
+     sudo apt-get install -y gawk   # Debian/Ubuntu
+     ```
+   - `goimports` + `gofumpt` (formatters; `make quality` soft-skips them if absent):
+     ```bash
+     make tools
+     ```
 
 2. **Clone and Build**:
    ```bash
@@ -541,7 +560,7 @@ We welcome contributions! Here's how to get started:
    go mod tidy
    ```
 
-3. **Run Tests**:
+3. **Run Tests & Quality**:
    ```bash
    # Run unit tests
    go test -v ./...
@@ -552,10 +571,22 @@ We welcome contributions! Here's how to get started:
    # Run benchmarks
    go test -bench=. -benchmem ./...
 
-   # Check code quality
-   go vet ./...
-   go fmt ./...
+   # Full quality gate + tests + coverage (the default target)
+   make
+
+   # Just the quality gate (format, vet, import-alias check, golangci-lint --fix)
+   make quality
    ```
+
+   > **Note:** `make` / `make quality` **mutate** your working tree — they run `gofumpt -w`,
+   > `goimports -w`, and `golangci-lint run --fix`. For a non-mutating check use `make lint`
+   > (bare `golangci-lint run`). CI runs `make` and then `git diff --exit-code`, so any drift
+   > the auto-fixers would silently correct fails the build instead.
+
+   > **Trip-wire:** `.github/alias.sh`'s `go list` shell-out is inert while this plugin is
+   > pure stdlib (zero external imports). If you ever add an external dependency, revisit that
+   > script's handling of import paths before merging — a crafted path could otherwise reach
+   > shell execution in CI.
 
 4. **Local Testing**:
    ```bash

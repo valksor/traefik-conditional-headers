@@ -6,17 +6,21 @@ on:
       - master
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: read
+
 jobs:
 
   main:
     name: Main Process
     runs-on: ubuntu-slim
     env:
-      GO_VERSION: 1.24
-      GOLANGCI_LINT_VERSION: v2.7.1
+      GO_VERSION: "1.26"
+      GOLANGCI_LINT_VERSION: v2.12.2
       YAEGI_VERSION: v0.16.1
       CGO_ENABLED: 1
-    
+
     steps:
 
       # https://github.com/marketplace/actions/setup-go-environment
@@ -27,7 +31,7 @@ jobs:
 
       # https://github.com/marketplace/actions/checkout
       - name: Check out code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -37,6 +41,13 @@ jobs:
 
       - name: Install Yaegi ${{ env.YAEGI_VERSION }}
         run: curl -sfL https://raw.githubusercontent.com/traefik/yaegi/master/install.sh | bash -s -- -b $(go env GOPATH)/bin ${YAEGI_VERSION}
+
+      - name: Install quality tooling
+        run: |
+          command -v bash >/dev/null || { echo "bash is required for the import-alias check"; exit 1; }
+          sudo apt-get update && sudo apt-get install -y gawk
+          go install golang.org/x/tools/cmd/goimports@v0.47.0
+          go install mvdan.cc/gofumpt@v0.10.0
 
       - name: Check and get dependencies
         run: |
@@ -50,8 +61,12 @@ jobs:
       - name: Lint and Tests
         run: make
 
+      # Fail if `make` (gofumpt/goimports/golangci-lint --fix) rewrote any committed source.
+      - name: Ensure quality made no changes
+        run: git diff --exit-code
+
       - name: Install goveralls
-        run: go install github.com/mattn/goveralls@latest
+        run: go install github.com/mattn/goveralls@v0.0.12
       - name: Send coverage
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
