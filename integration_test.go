@@ -413,7 +413,7 @@ func TestIntegrationPerformanceComplexConfig(t *testing.T) {
 	for _, host := range testHosts {
 		t.Run("Performance test for "+host, func(t *testing.T) {
 			// Run multiple iterations to check performance
-			for range 100 {
+			for i := 0; i < 100; i++ {
 				start := testing.AllocsPerRun(1, func() {
 					makeTestRequest(t, config, host)
 				})

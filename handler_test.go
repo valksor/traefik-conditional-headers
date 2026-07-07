@@ -324,7 +324,7 @@ func BenchmarkConditionalHeadersServeHTTP(b *testing.B) {
 	responseRecorder := createTestResponse()
 
 	b.ResetTimer()
-	for range b.N {
+	for i := 0; i < b.N; i++ {
 		responseRecorder.Body.Reset()
 		handler.ServeHTTP(responseRecorder, req)
 	}

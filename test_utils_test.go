@@ -1,15 +1,14 @@
 package traefik_conditional_headers
 
 import (
-	"context"
-	"maps"
 	"net/http"
 	"net/http/httptest"
 )
 
 // createTestRequest creates an HTTP request for testing.
 func createTestRequest(host string) *http.Request {
-	req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "https://"+host+testURLPath, nil)
+	//nolint:noctx // yaegi (Traefik's plugin interpreter) lacks httptest.NewRequestWithContext; tests need no request context.
+	req := httptest.NewRequest(http.MethodGet, "https://"+host+testURLPath, nil)
 	req.Host = host
 
 	return req
@@ -35,7 +34,9 @@ func mockNextHandler() http.Handler {
 func headerCaptureHandler(capturedHeadersRef *map[string][]string) http.Handler {
 	return http.HandlerFunc(func(responseWriter http.ResponseWriter, request *http.Request) {
 		*capturedHeadersRef = make(map[string][]string)
-		maps.Copy((*capturedHeadersRef), request.Header)
+		for key, values := range request.Header {
+			(*capturedHeadersRef)[key] = values
+		}
 		responseWriter.WriteHeader(http.StatusOK)
 		_, err := responseWriter.Write([]byte(testResponseOK))
 		if err != nil {

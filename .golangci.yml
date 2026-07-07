@@ -45,7 +45,9 @@ linters:
     - inamedparam
     - ineffassign
     - interfacebloat
-    - intrange
+    # intrange disabled: rewrites to range-over-int, which yaegi (Traefik's plugin
+    # interpreter, see yaegi_test) cannot parse — breaks plugin loading.
+    # - intrange
     - iotamixing
     - loggercheck
     - makezero
@@ -81,7 +83,9 @@ linters:
     - gochecksumtype
     - goconst
     - importas
-    - modernize
+    # modernize disabled: rewrites to newer stdlib/syntax (maps.Copy, range-over-int)
+    # that yaegi (Traefik's plugin interpreter, see yaegi_test) cannot parse.
+    # - modernize
     - nosprintfhostport
     - prealloc
     - tparallel
