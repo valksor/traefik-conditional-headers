@@ -1,6 +1,9 @@
 name: Go Matrix
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
 
   cross:
@@ -11,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ 1.24, 1.25, 1.x ]
+        go-version: [ 1.26, 1.x ]
         os: [ubuntu-slim, macos-26, windows-latest]
 
     steps:
@@ -23,7 +26,7 @@ jobs:
 
       # https://github.com/marketplace/actions/checkout
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Test
         run: make test
