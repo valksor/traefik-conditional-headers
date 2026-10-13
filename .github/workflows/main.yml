@@ -16,22 +16,23 @@ jobs:
     name: Main Process
     runs-on: ubuntu-latest
     env:
-      GO_VERSION: "1.26"
-      GOLANGCI_LINT_VERSION: v2.12.2
+      GO_VERSION: "1.27"
+      GOLANGCI_LINT_VERSION: v2.14.0
       YAEGI_VERSION: v0.16.1
+      GOVERALLS_VERSION: v0.0.12
       CGO_ENABLED: 1
 
     steps:
 
       # https://github.com/marketplace/actions/setup-go-environment
       - name: Set up Go ${{ env.GO_VERSION }}
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
       # https://github.com/marketplace/actions/checkout
       - name: Check out code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
           persist-credentials: false
@@ -42,18 +43,18 @@ jobs:
       # CGO_ENABLED=0: neither tool needs cgo; avoids requiring a C toolchain to compile them.
       - name: Install golangci-lint ${{ env.GOLANGCI_LINT_VERSION }}
         run: |
-          CGO_ENABLED=1 go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}"
+          CGO_ENABLED=0 go install "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}"
           golangci-lint version
 
       - name: Install Yaegi ${{ env.YAEGI_VERSION }}
-        run: CGO_ENABLED=1 go install "github.com/traefik/yaegi/cmd/yaegi@${YAEGI_VERSION}"
+        run: CGO_ENABLED=0 go install "github.com/traefik/yaegi/cmd/yaegi@${YAEGI_VERSION}"
 
       - name: Install quality tooling
         run: |
           command -v bash >/dev/null || { echo "bash is required for the import-alias check"; exit 1; }
           sudo apt-get update && sudo apt-get install -y gawk
-          go install golang.org/x/tools/cmd/goimports@v0.47.0
-          go install mvdan.cc/gofumpt@v0.10.0
+          go install golang.org/x/tools/cmd/goimports@v0.52.0
+          go install mvdan.cc/gofumpt@v0.12.0
 
       - name: Check and get dependencies
         run: |
@@ -71,8 +72,8 @@ jobs:
       - name: Ensure quality made no changes
         run: git diff --exit-code
 
-      - name: Install goveralls
-        run: go install github.com/mattn/goveralls@latest
+      - name: Install goveralls ${{ env.GOVERALLS_VERSION }}
+        run: go install "github.com/mattn/goveralls@${GOVERALLS_VERSION}"
       - name: Send coverage
         env:
           COVERALLS_TOKEN: ${{ secrets.GITHUB_TOKEN }}

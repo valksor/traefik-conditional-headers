@@ -1,3 +1,3 @@
 module github.com/valksor/traefik-conditional-headers
 
-go 1.26
+go 1.27

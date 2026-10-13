@@ -117,7 +117,7 @@ make
 make lint
 ```
 
-> Requires `golangci-lint` v2.12.2 and `gawk`; run `make tools` to install `goimports`/`gofumpt`.
+> Requires `golangci-lint` v2.14.0 and `gawk`; run `make tools` to install `goimports`/`gofumpt`.
 > See [Contributing → Development Setup](#development-setup-1) for details. `make`/`make quality`
 > reformat files in place.
 
@@ -537,13 +537,13 @@ We welcome contributions! Here's how to get started:
 ### Development Setup
 
 1. **Prerequisites**:
-   - Go 1.26+
+   - Go 1.27+
    - Docker
    - Traefik v3.0+
-   - `golangci-lint` **v2.12.2** and `gawk` (required by `make`):
+   - `golangci-lint` **v2.14.0** and `gawk` (required by `make`):
      ```bash
-     # golangci-lint v2.12.2 (installed from source via the Go module proxy)
-     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+     # golangci-lint v2.14.0 (installed from source via the Go module proxy)
+     go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0
      # gawk
      brew install gawk        # macOS
      sudo apt-get install -y gawk   # Debian/Ubuntu

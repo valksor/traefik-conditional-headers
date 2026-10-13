@@ -2,13 +2,14 @@ version: "2"
 
 run:
   timeout: 5m
-  exclude-dirs:
-    - .claude
-    - v1
 
 formatters:
   enable:
     - gofumpt
+  settings:
+    gofumpt:
+      extra:
+        group-params: true
 
 linters:
   enable:
@@ -98,8 +99,6 @@ linters:
       # Only report json.Marshal calls that can genuinely fail (unsafe types).
       # Safe types like plain structs and map[string]string are ignored.
       check-error-free-encoding: false
-    gofumpt:
-      extra-rules: true
     gocritic:
       disabled-checks:
         - ifElseChain
@@ -107,24 +106,11 @@ linters:
         - appendAssign
         - assignOp
         - unlambda
-    gosec:
-      excludes:
-        - G101 # Hardcoded credentials - false positive on config key mappings
-        - G104
-        - G115 # Integer overflow - file descriptors are small positive integers
-        - G118 # Background context in goroutines - lifecycle contexts intentionally outlive requests
-        - G204
-        - G301
-        - G302
-        - G304
-        - G306
-        - G702 # Command injection via taint - user-controlled $EDITOR resolved through exec.LookPath
-        - G703 # Path traversal via taint - paths are validated by ValidatePathWithRoots
-        - G704 # SSRF via taint - false positives on hardcoded API URLs and Unix sockets
-        - G706 # Log injection via taint - slog properly escapes structured values
-
-issues:
-  exclude-rules:
+  exclusions:
+    paths:
+      - .claude
+      - v1
+    rules:
     - path: _test\.go
       linters:
         - errcheck
@@ -138,7 +124,6 @@ issues:
 
 output:
   path-mode: "abs"
-  sort-results: true
   formats:
     text:
       colors: true

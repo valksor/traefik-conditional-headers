@@ -6,8 +6,11 @@ set -euo pipefail
 # Exception: when the actual package name equals the current package name, alias is NOT flagged
 # (since using the same name would conflict with the current package)
 
-# Pre-build a cache of import path -> actual package name for common stdlib packages
-# This speeds up the check significantly
+# Resolve import path -> actual package name once, without interpolating source-controlled
+# paths into shell commands inside awk.
+package_map=$(mktemp)
+trap 'rm -f "$package_map"' EXIT
+go list -f '{{.ImportPath}}{{"\t"}}{{.Name}}' all > "$package_map"
 
 find . -type f -name '*.go' \
   -not -name '*.qtpl.go' \
@@ -15,11 +18,16 @@ find . -type f -name '*.go' \
   -not -path '*/.claude/*' \
   -not -path '*/prototype/*' \
   | while read -r file; do
-    gawk '
+    gawk -v package_map="$package_map" '
       BEGIN {
         inblock = 0
         line_count = 0
         current_package = ""
+        while ((getline entry < package_map) > 0) {
+          split(entry, fields, "\t")
+          package_names[fields[1]] = fields[2]
+        }
+        close(package_map)
       }
 
       # Store all lines of the file and detect current package
@@ -81,13 +89,8 @@ find . -type f -name '*.go' \
 
             # Determine actual package name
             pkg_name = base
-            # Only check external packages, not stdlib or local paths
-            if (path !~ /^\./ && index(path, ".") > 0) {
-              cmd = "go list -f \"{{.Name}}\" \"" path "\" 2>/dev/null"
-              if ((cmd | getline pname) > 0) {
-                pkg_name = pname
-              }
-              close(cmd)
+            if (path in package_names) {
+              pkg_name = package_names[path]
             }
 
             # Skip if alias is underscore, dot, equals base, or base is already used
@@ -111,12 +114,8 @@ find . -type f -name '*.go' \
 
             # Determine actual package name
             pkg_name = base
-            if (path !~ /^\./ && index(path, ".") > 0) {
-              cmd = "go list -f \"{{.Name}}\" \"" path "\" 2>/dev/null"
-              if ((cmd | getline pname) > 0) {
-                pkg_name = pname
-              }
-              close(cmd)
+            if (path in package_names) {
+              pkg_name = package_names[path]
             }
 
             # Same check for single-line import (including alias != pkg_name for versioned modules)

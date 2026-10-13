@@ -3,9 +3,13 @@
 
 export GO111MODULE=on
 
+GOLANGCI_LINT_VERSION := v2.14.0
+
 default: quality test coverage
 
 quality:
+	@found="$$(golangci-lint version --short 2>/dev/null)"; \
+	if [ "v$$found" != "$(GOLANGCI_LINT_VERSION)" ]; then echo "golangci-lint $(GOLANGCI_LINT_VERSION) required (found: $${found:-not installed or unrecognized}) — see README Development Setup"; exit 1; fi
 	@if command -v goimports >/dev/null; then find . -name '*.go' -not -path './.claude/*' -not -path './vendor/*' -exec goimports -w {} +; else echo "goimports not found — run 'make tools' (skipping)"; fi
 	@if command -v gofumpt >/dev/null; then find . -name '*.go' -not -path './.claude/*' -not -path './vendor/*' -exec gofumpt -l -w {} +; else echo "gofumpt not found — run 'make tools' (skipping)"; fi
 	go vet ./...
@@ -13,14 +17,13 @@ quality:
 	@alias_out="$$(./.github/alias.sh)"; rc=$$?; \
 	if [ $$rc -ne 0 ]; then echo "alias check failed to run (exit $$rc)"; exit 1; fi; \
 	if [ -n "$$alias_out" ]; then echo "Unnecessary import alias detected:"; echo "$$alias_out"; exit 1; fi
-	@command -v golangci-lint >/dev/null || { echo "golangci-lint v2.12.2 required — see README Development Setup"; exit 1; }
 	golangci-lint run ./... --fix
 
-# Installs the go-installable tools only. golangci-lint (v2.12.2) + gawk are installed
+# Installs the go-installable tools only. golangci-lint (v2.14.0) + gawk are installed
 # separately — see README Development Setup.
 tools:
-	go install golang.org/x/tools/cmd/goimports@v0.47.0
-	go install mvdan.cc/gofumpt@v0.10.0
+	go install golang.org/x/tools/cmd/goimports@v0.52.0
+	go install mvdan.cc/gofumpt@v0.12.0
 
 lint:
 	golangci-lint run
